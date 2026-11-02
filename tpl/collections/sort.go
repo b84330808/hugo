@@ -163,6 +163,15 @@ func (p pairList) Less(i, j int) bool {
 	iv := p.Pairs[i].Key
 	jv := p.Pairs[j].Key
 
+	// Compare against the zero value of the dynamic type;
+	// a nil interface is treated as a missing value.
+	if iv.Kind() == reflect.Interface {
+		iv = iv.Elem()
+	}
+	if jv.Kind() == reflect.Interface {
+		jv = jv.Elem()
+	}
+
 	if iv.IsValid() {
 		if jv.IsValid() {
 			// can only call Interface() on valid reflect Values
@@ -170,12 +179,12 @@ func (p pairList) Less(i, j int) bool {
 		}
 
 		// if j is invalid, test i against i's zero value
-		return p.sortComp.LtCollate(p.Collator, iv.Interface(), reflect.Zero(iv.Type()))
+		return p.sortComp.LtCollate(p.Collator, iv.Interface(), reflect.Zero(iv.Type()).Interface())
 	}
 
 	if jv.IsValid() {
 		// if i is invalid, test j against j's zero value
-		return p.sortComp.LtCollate(p.Collator, reflect.Zero(jv.Type()), jv.Interface())
+		return p.sortComp.LtCollate(p.Collator, reflect.Zero(jv.Type()).Interface(), jv.Interface())
 	}
 
 	return false
